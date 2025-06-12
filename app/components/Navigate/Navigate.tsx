@@ -1,8 +1,9 @@
-//import { cookies } from 'next/headers'
+// import { cookies } from 'next/headers'
 import Menu from './Menu'
 
-function Navigate() {
-    //const isLogin = cookies().get("Authorization")
+async function Navigate() {
+    // const token = (await cookies()).get("token")?.value
+    // console.log("token: ", token)
     return (
         <Menu />
     )

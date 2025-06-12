@@ -1,5 +1,8 @@
 'use client'
-import { useState } from 'react'
+
+import { useState, useEffect } from 'react'
+import { getToken } from '../utils/getToken'
+
 type Producto = {
   id: number
   nombre: string
@@ -7,26 +10,43 @@ type Producto = {
   precio: number
   stock: number
 }
-export default function Productos() {
-  const [productos, setProductos] = useState<Producto[]>([
-    {
-      id: 1,
-      nombre: 'Laptop Gamer',
-      descripcion: 'Laptop potente para juegos',
-      precio: 1500,
-      stock: 10,
-    },
-  ])
 
+export default function Productos() {
+  const [productos, setProductos] = useState<Producto[]>([])
   const [modoEdicion, setModoEdicion] = useState<null | Producto>(null)
   const [mostrarFormulario, setMostrarFormulario] = useState(false)
-
   const [form, setForm] = useState({
     nombre: '',
     descripcion: '',
     precio: '',
     stock: '',
   })
+  const token = getToken()
+  const baseUrl = process.env.NEXT_PUBLIC_API_GOLANG
+
+  const cargarProductos = async () => {
+    if (!baseUrl) {
+      console.error('NEXT_PUBLIC_API_GOLANG no definido')
+      return
+    }
+    try {
+      const res = await fetch(`${baseUrl}/api/products`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      })
+      if (!res.ok) {
+        throw new Error('Error al obtener productos')
+      }
+      const data = await res.json()
+      setProductos(data)
+    } catch (error) {
+      console.error(error)
+    }
+  }
+  useEffect(() => {
+    cargarProductos()
+  }, [])
 
   const resetForm = () => {
     setForm({ nombre: '', descripcion: '', precio: '', stock: '' })
@@ -34,24 +54,44 @@ export default function Productos() {
     setMostrarFormulario(false)
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-
-    const nuevoProducto: Producto = {
-      id: modoEdicion ? modoEdicion.id : Date.now(),
+    if (!baseUrl) throw new Error('La variable de entorno NEXT_PUBLIC_API_GOLANG no está definida')
+    const nuevoProducto = {
       nombre: form.nombre,
       descripcion: form.descripcion,
       precio: parseFloat(form.precio),
       stock: parseInt(form.stock),
     }
+    try {
+      const url = modoEdicion
+        ? `${baseUrl}/api/products/${modoEdicion.id}`
+        : `${baseUrl}/api/products`
 
-    if (modoEdicion) {
-      setProductos(productos.map(p => (p.id === modoEdicion.id ? nuevoProducto : p)))
-    } else {
-      setProductos([...productos, nuevoProducto])
+      const method = modoEdicion ? 'PUT' : 'POST'
+      const res = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(nuevoProducto),
+      })
+      if (!res.ok) {
+        const errorData = await res.json()
+        throw new Error(errorData.error || 'Error al guardar producto')
+      }
+      const productoGuardado = await res.json()
+      if (modoEdicion) {
+        setProductos(productos.map(p => (p.id === modoEdicion.id ? productoGuardado : p)))
+      } else {
+        setProductos([...productos, productoGuardado])
+      }
+      resetForm()
+    } catch (error) {
+      console.error('Error al guardar producto:', error)
+      alert('Error al guardar producto')
     }
-
-    resetForm()
   }
 
   const handleEdit = (producto: Producto) => {
@@ -65,9 +105,28 @@ export default function Productos() {
     setMostrarFormulario(true)
   }
 
-  const handleDelete = (id: number) => {
-    setProductos(productos.filter(p => p.id !== id))
-    if (modoEdicion?.id === id) resetForm()
+  const handleDelete = async (id: number) => {
+    if (!baseUrl) {
+      alert('No está configurada la variable de entorno')
+      return
+    }
+    try {
+      const res = await fetch(`${baseUrl}/api/products/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      })
+      if (!res.ok) {
+        const errorData = await res.json()
+        throw new Error(errorData.error || 'Error al eliminar producto')
+      }
+      setProductos(productos.filter(p => p.id !== id))
+      if (modoEdicion?.id === id) resetForm()
+    } catch (error) {
+      console.error('Error al eliminar producto:', error)
+      alert('Error al eliminar producto')
+    }
   }
 
   return (
@@ -116,6 +175,8 @@ export default function Productos() {
                 value={form.precio}
                 onChange={e => setForm({ ...form, precio: e.target.value })}
                 required
+                min={0}
+                step="0.01"
               />
               <input
                 type="number"
@@ -124,9 +185,9 @@ export default function Productos() {
                 value={form.stock}
                 onChange={e => setForm({ ...form, stock: e.target.value })}
                 required
+                min={0}
               />
             </div>
-
             <div className="mt-4 flex justify-center gap-2">
               <button
                 type="submit"
@@ -153,9 +214,8 @@ export default function Productos() {
             >
               <h2 className="text-xl font-semibold">{producto.nombre}</h2>
               <p className="text-gray-600">{producto.descripcion}</p>
-              <p className="text-sm text-gray-800 mt-1">💵 ${producto.precio}</p>
+              <p className="text-sm text-gray-800 mt-1">💵 ${producto.precio.toFixed(2)}</p>
               <p className="text-sm text-gray-800">📦 Stock: {producto.stock}</p>
-
               <div className="flex gap-2 mt-4">
                 <button
                   onClick={() => handleEdit(producto)}
