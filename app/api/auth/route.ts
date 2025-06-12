@@ -19,7 +19,10 @@ export async function POST() {
         })
         return response
     } catch (error) {
-        console.log(error)
-        return { error: error }
+        console.error(error)
+        return NextResponse.json(
+            { error: 'Error inesperado del servidor' },
+            { status: 500 }
+        )
     }
 }
