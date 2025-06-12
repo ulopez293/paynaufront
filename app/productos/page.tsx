@@ -2,14 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { getToken } from '../utils/getToken'
+import { Producto } from '../interface/Producto'
 
-type Producto = {
-  id: number
-  nombre: string
-  descripcion: string
-  precio: number
-  stock: number
-}
 
 export default function Productos() {
   const [productos, setProductos] = useState<Producto[]>([])
@@ -105,7 +99,7 @@ export default function Productos() {
     setMostrarFormulario(true)
   }
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     if (!baseUrl) {
       alert('No está configurada la variable de entorno')
       return

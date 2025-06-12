@@ -1,27 +1,27 @@
 'use client'
-import { useState } from 'react'
-type Producto = {
-    id: string
-    nombre: string
-    precio: number
-}
-type ProductoConCantidad = Producto & {
-    cantidad: number
-}
+import { useEffect, useState } from 'react'
+import { Producto } from '../interface/Producto'
+import { getToken } from '../utils/getToken'
+
+type ProductoConCantidad = Producto & { cantidad: number }
+
 type Orden = {
     id: string
     cliente: string
     fecha: string
-    productos: ProductoConCantidad[]
     total: string
+    productos: OrdenProductoConInfo[]
+}
+type OrdenProductoConInfo = {
+    id: string
+    ordenId: string
+    productoId: string
+    cantidad: number
+    total: number
+    producto: Producto
 }
 export default function Ordenes() {
-    const productosDisponibles: Producto[] = [
-        { id: '1', nombre: 'Camiseta', precio: 20 },
-        { id: '2', nombre: 'Pantalón', precio: 35 },
-        { id: '3', nombre: 'Zapatos', precio: 50 },
-        { id: '4', nombre: 'Gorra', precio: 15 },
-    ]
+    const [productosDisponibles, setProductosDisponibles] = useState<Producto[]>([])
 
     const [ordenes, setOrdenes] = useState<Orden[]>([])
     const [form, setForm] = useState({
@@ -34,20 +34,55 @@ export default function Ordenes() {
 
     const [productoSeleccionado, setProductoSeleccionado] = useState<string>('') // ID
     const [cantidadSeleccionada, setCantidadSeleccionada] = useState<number>(1) // Cantidad del producto
-    const [modoEdicion, setModoEdicion] = useState<Orden | null>(null)
     const [mostrarFormulario, setMostrarFormulario] = useState(false)
     const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false)
     const [tipoConfirmacion, setTipoConfirmacion] = useState<'guardar' | 'cancelar'>('guardar')
     const [idCancelar, setIdCancelar] = useState<string | null>(null)
 
-    const calcularTotal = (productos: ProductoConCantidad[]) =>
-        `$${productos.reduce((acc, p) => acc + p.precio * p.cantidad, 0).toFixed(2)}`
+
+    const token = getToken()
+    const baseUrl = process.env.NEXT_PUBLIC_API_GOLANG
+
+    const cargarProductos = async () => {
+        try {
+            const res = await fetch(`${baseUrl}/api/products`, {
+                headers: { 'Authorization': `Bearer ${token}` },
+            })
+            if (!res.ok) throw new Error('Error al obtener productos')
+            const data = await res.json()
+            setProductosDisponibles(data)
+        } catch (error) {
+            console.error(error)
+        }
+    }
+    const cargarOrdenes = async () => {
+        try {
+            const res = await fetch(`${baseUrl}/api/orders`, {
+                headers: { 'Authorization': `Bearer ${token}` },
+            })
+            if (!res.ok) throw new Error('Error al obtener productos')
+            const data = await res.json()
+            setOrdenes(data)
+        } catch (error) {
+            console.error(error)
+        }
+    }
+    useEffect(() => {
+        if (!baseUrl) {
+            console.error('NEXT_PUBLIC_API_GOLANG no definido')
+            return
+        }
+        cargarProductos()
+        cargarOrdenes()
+    }, [])
+
+
+    const calcularTotal = (productos: ProductoConCantidad[]) => `$${productos.reduce((acc, p) => acc + p.precio * p.cantidad, 0).toFixed(2)}`
 
     const resetForm = () => {
         setForm({ id: '', cliente: '', fecha: '', productos: [], total: '' })
         setProductoSeleccionado('')
         setCantidadSeleccionada(1)
-        setModoEdicion(null)
         setMostrarFormulario(false)
     }
 
@@ -55,12 +90,11 @@ export default function Ordenes() {
         if (!productoSeleccionado || cantidadSeleccionada < 1) return
 
         const producto = productosDisponibles.find(p => p.id === productoSeleccionado)
+        console.log("producto ", productoSeleccionado);
         if (!producto) return
-
         // Verificar si el producto ya está agregado para sumar la cantidad
         const productoExistenteIndex = form.productos.findIndex(p => p.id === productoSeleccionado)
         let nuevosProductos: ProductoConCantidad[]
-
         if (productoExistenteIndex >= 0) {
             // Actualizar la cantidad
             nuevosProductos = [...form.productos]
@@ -69,13 +103,11 @@ export default function Ordenes() {
             // Agregar nuevo producto con cantidad
             nuevosProductos = [...form.productos, { ...producto, cantidad: cantidadSeleccionada }]
         }
-
         setForm({
             ...form,
             productos: nuevosProductos,
             total: calcularTotal(nuevosProductos),
         })
-
         setProductoSeleccionado('')
         setCantidadSeleccionada(1)
     }
@@ -100,23 +132,33 @@ export default function Ordenes() {
         })
     }
 
-    const submitOrden = () => {
-        const nuevaOrden: Orden = {
-            id: form.id || Date.now().toString(),
+    const submitOrden = async () => {
+        const nuevaOrden = {
             cliente: form.cliente,
-            fecha: form.fecha,
-            productos: form.productos,
-            total: calcularTotal(form.productos),
+            productos: form.productos.map(p => ({
+                producto_id: p.id,
+                cantidad: p.cantidad,
+            })),
         }
-
-        if (modoEdicion) {
-            setOrdenes(ordenes.map(o => (o.id === modoEdicion.id ? nuevaOrden : o)))
-        } else {
-            setOrdenes([...ordenes, nuevaOrden])
+        try {
+            const res = await fetch(`${baseUrl}/api/orders`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify(nuevaOrden),
+            })
+            if (!res.ok) throw new Error('Error al guardar la orden')
+            // Si quieres usar la respuesta del backend (por ejemplo, con ID generado)
+            const ordenGuardada = await res.json()
+            setOrdenes([...ordenes, ordenGuardada])
+            resetForm()
+            setMostrarConfirmacion(false)
+        } catch (error) {
+            console.error('Error al guardar la orden:', error)
+            alert('Hubo un error al guardar la orden. Intenta de nuevo.')
         }
-
-        resetForm()
-        setMostrarConfirmacion(false)
     }
 
     const handleFormSubmit = (e: React.FormEvent) => {
@@ -125,27 +167,14 @@ export default function Ordenes() {
         setMostrarConfirmacion(true)
     }
 
-    const handleCancelarOrden = (id: string) => {
-        setTipoConfirmacion('cancelar')
-        setIdCancelar(id)
-        setMostrarConfirmacion(true)
-    }
-
     const confirmarAccion = () => {
         if (tipoConfirmacion === 'guardar') {
             submitOrden()
         } else if (tipoConfirmacion === 'cancelar' && idCancelar) {
             setOrdenes(ordenes.filter(o => o.id !== idCancelar))
-            if (modoEdicion?.id === idCancelar) resetForm()
             setIdCancelar(null)
             setMostrarConfirmacion(false)
         }
-    }
-
-    const editarOrden = (orden: Orden) => {
-        setForm(orden)
-        setModoEdicion(orden)
-        setMostrarFormulario(true)
     }
 
     return (
@@ -153,7 +182,7 @@ export default function Ordenes() {
             <div className="max-w-6xl mx-auto">
                 <h1 className="text-3xl font-bold mb-8 text-center">Órdenes</h1>
 
-                {!mostrarFormulario && !modoEdicion && (
+                {!mostrarFormulario && (
                     <div className="text-center mb-6">
                         <button
                             onClick={() => setMostrarFormulario(true)}
@@ -167,7 +196,7 @@ export default function Ordenes() {
                 {mostrarFormulario && (
                     <form onSubmit={handleFormSubmit} className="bg-gray-100 p-4 rounded mb-8 max-w-full">
                         <h2 className="text-xl font-semibold mb-4">
-                            {modoEdicion ? 'Editar Orden' : 'Agregar Orden'}
+                            Agregar Orden
                         </h2>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                             <input
@@ -257,7 +286,7 @@ export default function Ordenes() {
                                 type="submit"
                                 className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 w-full sm:w-auto"
                             >
-                                {modoEdicion ? 'Guardar cambios' : 'Agregar'}
+                                Agregar
                             </button>
                             <button
                                 type="button"
@@ -280,7 +309,6 @@ export default function Ordenes() {
                                 <th className="p-4">Fecha</th>
                                 <th className="p-4">Productos</th>
                                 <th className="p-4">Total</th>
-                                <th className="p-4">Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -293,26 +321,12 @@ export default function Ordenes() {
                                         <ul className="list-disc list-inside">
                                             {orden.productos.map((p, i) => (
                                                 <li key={i}>
-                                                    {p.nombre} x {p.cantidad} = ${(p.precio * p.cantidad).toFixed(2)}
+                                                    {p.producto.nombre} ${p.producto.precio} x {p.cantidad} = ${(p.producto.precio * p.cantidad).toFixed(2)}
                                                 </li>
                                             ))}
                                         </ul>
                                     </td>
                                     <td className="p-4">{orden.total}</td>
-                                    <td className="p-4 flex gap-2">
-                                        <button
-                                            onClick={() => editarOrden(orden)}
-                                            className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 text-xs"
-                                        >
-                                            Editar
-                                        </button>
-                                        <button
-                                            onClick={() => handleCancelarOrden(orden.id)}
-                                            className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 text-xs"
-                                        >
-                                            Cancelar
-                                        </button>
-                                    </td>
                                 </tr>
                             ))}
                             {ordenes.length === 0 && (
