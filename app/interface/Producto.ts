@@ -5,3 +5,5 @@ export type Producto = {
   precio: number
   stock: number
 }
+
+export type ProductoConCantidad = Producto & { cantidad: number }

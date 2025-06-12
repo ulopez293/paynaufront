@@ -1,25 +1,10 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { Producto } from '../interface/Producto'
+import { Producto, ProductoConCantidad } from '../interface/Producto'
 import { getToken } from '../utils/getToken'
+import { NuevaOrden, Orden } from '../interface/Orden'
+import { cargarOrdenes, cargarProductos, submitOrden } from '../utils/apiService'
 
-type ProductoConCantidad = Producto & { cantidad: number }
-
-type Orden = {
-    id: string
-    cliente: string
-    fecha: string
-    total: string
-    productos: OrdenProductoConInfo[]
-}
-type OrdenProductoConInfo = {
-    id: string
-    ordenId: string
-    productoId: string
-    cantidad: number
-    total: number
-    producto: Producto
-}
 export default function Ordenes() {
     const [productosDisponibles, setProductosDisponibles] = useState<Producto[]>([])
 
@@ -39,41 +24,23 @@ export default function Ordenes() {
     const [tipoConfirmacion, setTipoConfirmacion] = useState<'guardar' | 'cancelar'>('guardar')
     const [idCancelar, setIdCancelar] = useState<string | null>(null)
 
-
     const token = getToken()
-    const baseUrl = process.env.NEXT_PUBLIC_API_GOLANG
-
-    const cargarProductos = async () => {
-        try {
-            const res = await fetch(`${baseUrl}/api/products`, {
-                headers: { 'Authorization': `Bearer ${token}` },
-            })
-            if (!res.ok) throw new Error('Error al obtener productos')
-            const data = await res.json()
-            setProductosDisponibles(data)
-        } catch (error) {
-            console.error(error)
-        }
-    }
-    const cargarOrdenes = async () => {
-        try {
-            const res = await fetch(`${baseUrl}/api/orders`, {
-                headers: { 'Authorization': `Bearer ${token}` },
-            })
-            if (!res.ok) throw new Error('Error al obtener productos')
-            const data = await res.json()
-            setOrdenes(data)
-        } catch (error) {
-            console.error(error)
-        }
-    }
     useEffect(() => {
-        if (!baseUrl) {
-            console.error('NEXT_PUBLIC_API_GOLANG no definido')
+        if (!token) {
+            console.error('Token no disponible')
             return
         }
-        cargarProductos()
-        cargarOrdenes()
+        const fetchData = async () => {
+            try {
+                const productos = await cargarProductos(token)
+                setProductosDisponibles(productos)
+                const ordenes = await cargarOrdenes(token)
+                setOrdenes(ordenes)
+            } catch (error) {
+                console.error(error)
+            }
+        }
+        fetchData()
     }, [])
 
 
@@ -132,8 +99,12 @@ export default function Ordenes() {
         })
     }
 
-    const submitOrden = async () => {
-        const nuevaOrden = {
+    const submitOrdenHandler = async () => {
+        if (!token) {
+            console.error('Token no disponible')
+            return
+        }
+        const nuevaOrden: NuevaOrden = {
             cliente: form.cliente,
             productos: form.productos.map(p => ({
                 producto_id: p.id,
@@ -141,17 +112,7 @@ export default function Ordenes() {
             })),
         }
         try {
-            const res = await fetch(`${baseUrl}/api/orders`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
-                body: JSON.stringify(nuevaOrden),
-            })
-            if (!res.ok) throw new Error('Error al guardar la orden')
-            // Si quieres usar la respuesta del backend (por ejemplo, con ID generado)
-            const ordenGuardada = await res.json()
+            const ordenGuardada = await submitOrden(token, nuevaOrden)
             setOrdenes([...ordenes, ordenGuardada])
             resetForm()
             setMostrarConfirmacion(false)
@@ -169,7 +130,7 @@ export default function Ordenes() {
 
     const confirmarAccion = () => {
         if (tipoConfirmacion === 'guardar') {
-            submitOrden()
+            submitOrdenHandler()
         } else if (tipoConfirmacion === 'cancelar' && idCancelar) {
             setOrdenes(ordenes.filter(o => o.id !== idCancelar))
             setIdCancelar(null)

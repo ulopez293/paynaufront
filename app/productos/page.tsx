@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { getToken } from '../utils/getToken'
 import { Producto } from '../interface/Producto'
+import { cargarProductos, deleteProducto, guardarProducto } from '../utils/apiService'
 
 
 export default function Productos() {
@@ -16,30 +17,21 @@ export default function Productos() {
     stock: '',
   })
   const token = getToken()
-  const baseUrl = process.env.NEXT_PUBLIC_API_GOLANG
 
-  const cargarProductos = async () => {
-    if (!baseUrl) {
-      console.error('NEXT_PUBLIC_API_GOLANG no definido')
+  useEffect(() => {
+    if (!token) {
+      console.error('Token no disponible')
       return
     }
-    try {
-      const res = await fetch(`${baseUrl}/api/products`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      })
-      if (!res.ok) {
-        throw new Error('Error al obtener productos')
+    const fetchData = async () => {
+      try {
+        const productos = await cargarProductos(token)
+        setProductos(productos)
+      } catch (error) {
+        console.error(error)
       }
-      const data = await res.json()
-      setProductos(data)
-    } catch (error) {
-      console.error(error)
     }
-  }
-  useEffect(() => {
-    cargarProductos()
+    fetchData()
   }, [])
 
   const resetForm = () => {
@@ -50,32 +42,18 @@ export default function Productos() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!baseUrl) throw new Error('La variable de entorno NEXT_PUBLIC_API_GOLANG no está definida')
+    if (!token) {
+      console.error('Token no disponible')
+      return
+    }
     const nuevoProducto = {
       nombre: form.nombre,
       descripcion: form.descripcion,
       precio: parseFloat(form.precio),
-      stock: parseInt(form.stock),
+      stock: parseInt(form.stock, 10),
     }
     try {
-      const url = modoEdicion
-        ? `${baseUrl}/api/products/${modoEdicion.id}`
-        : `${baseUrl}/api/products`
-
-      const method = modoEdicion ? 'PUT' : 'POST'
-      const res = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(nuevoProducto),
-      })
-      if (!res.ok) {
-        const errorData = await res.json()
-        throw new Error(errorData.error || 'Error al guardar producto')
-      }
-      const productoGuardado = await res.json()
+      const productoGuardado = await guardarProducto(token, nuevoProducto, modoEdicion?.id)
       if (modoEdicion) {
         setProductos(productos.map(p => (p.id === modoEdicion.id ? productoGuardado : p)))
       } else {
@@ -100,29 +78,20 @@ export default function Productos() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!baseUrl) {
-      alert('No está configurada la variable de entorno')
+    if (!token) {
+      alert('Token no disponible')
       return
     }
     try {
-      const res = await fetch(`${baseUrl}/api/products/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      })
-      if (!res.ok) {
-        const errorData = await res.json()
-        throw new Error(errorData.error || 'Error al eliminar producto')
-      }
+      await deleteProducto(token, id)
       setProductos(productos.filter(p => p.id !== id))
+
       if (modoEdicion?.id === id) resetForm()
     } catch (error) {
       console.error('Error al eliminar producto:', error)
       alert('Error al eliminar producto')
     }
   }
-
   return (
     <main className="min-h-screen bg-white px-6 py-10">
       <div className="max-w-screen-md mx-auto">
