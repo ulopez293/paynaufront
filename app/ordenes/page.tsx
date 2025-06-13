@@ -8,7 +8,6 @@ import Button from '@mui/material/Button'
 
 export default function Ordenes() {
     const [productosDisponibles, setProductosDisponibles] = useState<Producto[]>([])
-
     const [ordenes, setOrdenes] = useState<Orden[]>([])
     const [form, setForm] = useState({
         id: '',
@@ -17,15 +16,14 @@ export default function Ordenes() {
         productos: [] as ProductoConCantidad[],
         total: '',
     })
-
     const [productoSeleccionado, setProductoSeleccionado] = useState<string>('') // ID
     const [cantidadSeleccionada, setCantidadSeleccionada] = useState<number>(1) // Cantidad del producto
     const [mostrarFormulario, setMostrarFormulario] = useState(false)
     const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false)
     const [tipoConfirmacion, setTipoConfirmacion] = useState<'guardar' | 'cancelar'>('guardar')
     const [idCancelar, setIdCancelar] = useState<string | null>(null)
-
     const token = getToken()
+
     useEffect(() => {
         if (!token) {
             console.error('Token no disponible')
@@ -44,19 +42,15 @@ export default function Ordenes() {
         fetchData()
     }, [])
 
-
     const calcularTotal = (productos: ProductoConCantidad[]) => `$${productos.reduce((acc, p) => acc + p.precio * p.cantidad, 0).toFixed(2)}`
-
     const resetForm = () => {
         setForm({ id: '', cliente: '', fecha: '', productos: [], total: '' })
         setProductoSeleccionado('')
         setCantidadSeleccionada(1)
         setMostrarFormulario(false)
     }
-
     const agregarProducto = () => {
         if (!productoSeleccionado || cantidadSeleccionada < 1) return
-
         const producto = productosDisponibles.find(p => p.id === productoSeleccionado)
         console.log("producto ", productoSeleccionado);
         if (!producto) return
@@ -88,7 +82,6 @@ export default function Ordenes() {
             total: calcularTotal(nuevosProductos),
         })
     }
-
     const cambiarCantidad = (index: number, nuevaCantidad: number) => {
         if (nuevaCantidad < 1) return
         const nuevosProductos = [...form.productos]
@@ -99,7 +92,6 @@ export default function Ordenes() {
             total: calcularTotal(nuevosProductos),
         })
     }
-
     const submitOrdenHandler = async () => {
         if (!token) {
             console.error('Token no disponible')
@@ -143,7 +135,6 @@ export default function Ordenes() {
         <main className="bg-white min-h-screen px-4 py-12 text-gray-800">
             <div className="max-w-6xl mx-auto">
                 <h1 className="text-3xl font-bold mb-8 text-center">Órdenes</h1>
-
                 {!mostrarFormulario && (
                     <div className="text-center mb-6">
                         <button
@@ -154,7 +145,6 @@ export default function Ordenes() {
                         </button>
                     </div>
                 )}
-
                 {mostrarFormulario && (
                     <form onSubmit={handleFormSubmit} className="bg-gray-100 p-4 rounded mb-8 max-w-full">
                         <h2 className="text-xl font-semibold mb-4">
@@ -182,7 +172,6 @@ export default function Ordenes() {
                                 required
                             />
                         </div>
-
                         <div className="border-t pt-4">
                             <h3 className="text-lg font-medium mb-2">Productos</h3>
                             <div className="flex flex-col sm:flex-row gap-2 mb-2">
@@ -198,7 +187,6 @@ export default function Ordenes() {
                                         </option>
                                     ))}
                                 </select>
-
                                 <input
                                     type="number"
                                     min={1}
@@ -206,7 +194,6 @@ export default function Ordenes() {
                                     onChange={e => setCantidadSeleccionada(Number(e.target.value))}
                                     className="border p-2 rounded w-full sm:w-20"
                                 />
-
                                 <button
                                     type="button"
                                     onClick={agregarProducto}
@@ -215,8 +202,6 @@ export default function Ordenes() {
                                     Agregar
                                 </button>
                             </div>
-
-                            {/* Lista de productos en la orden */}
                             <ul className="mb-2">
                                 {form.productos.map((p, index) => (
                                     <li
@@ -244,10 +229,8 @@ export default function Ordenes() {
                                     </li>
                                 ))}
                             </ul>
-
                             <p className="font-semibold">Total: {calcularTotal(form.productos)}</p>
                         </div>
-
                         <div className="mt-4 flex flex-col sm:flex-row gap-2">
                             <Button
                                 type="submit"
@@ -269,8 +252,6 @@ export default function Ordenes() {
                         </div>
                     </form>
                 )}
-
-                {/* Tabla de órdenes */}
                 <div className="overflow-x-auto">
                     <table className="w-full border border-gray-200 rounded-lg shadow-sm">
                         <thead className="bg-gray-100">
@@ -310,8 +291,6 @@ export default function Ordenes() {
                         </tbody>
                     </table>
                 </div>
-
-                {/* Modal confirmación */}
                 {mostrarConfirmacion && (
                     <div className="fixed inset-0 bg-[rgba(0,0,0,0.5)] flex items-center justify-center z-50">
                         <div className="bg-white p-6 rounded shadow max-w-sm w-full text-center">

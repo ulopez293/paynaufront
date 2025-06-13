@@ -1,4 +1,5 @@
 import { NuevaOrden } from "../interface/Orden"
+import { GuardarProducto } from "../interface/Producto"
 
 const baseUrl = process.env.NEXT_PUBLIC_API_GOLANG
 
@@ -49,15 +50,9 @@ export const deleteProducto = async (token: string, id: string) => {
     return
 }
 
-type ProductoInput = {
-    nombre: string
-    descripcion: string
-    precio: number
-    stock: number
-}
 export const guardarProducto = async (
     token: string,
-    producto: ProductoInput,
+    producto: GuardarProducto,
     id?: string
 ) => {
     if (!baseUrl) throw new Error('NEXT_PUBLIC_API_GOLANG no definido')

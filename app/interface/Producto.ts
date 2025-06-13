@@ -7,3 +7,10 @@ export type Producto = {
 }
 
 export type ProductoConCantidad = Producto & { cantidad: number }
+
+export type GuardarProducto = {
+    nombre: string
+    descripcion: string
+    precio: number
+    stock: number
+}

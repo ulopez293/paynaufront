@@ -11,12 +11,7 @@ export default function Productos() {
   const [productos, setProductos] = useState<Producto[]>([])
   const [modoEdicion, setModoEdicion] = useState<null | Producto>(null)
   const [mostrarFormulario, setMostrarFormulario] = useState(false)
-  const [form, setForm] = useState({
-    nombre: '',
-    descripcion: '',
-    precio: '',
-    stock: '',
-  })
+  const [form, setForm] = useState({ nombre: '', descripcion: '', precio: '', stock: '' })
   const token = getToken()
 
   useEffect(() => {
@@ -86,7 +81,6 @@ export default function Productos() {
     try {
       await deleteProducto(token, id)
       setProductos(productos.filter(p => p.id !== id))
-
       if (modoEdicion?.id === id) resetForm()
     } catch (error) {
       console.error('Error al eliminar producto:', error)
@@ -97,7 +91,6 @@ export default function Productos() {
     <main className="min-h-screen bg-white px-6 py-10">
       <div className="max-w-screen-md mx-auto">
         <h1 className="text-3xl font-bold mb-6 text-center">Gestión de Productos</h1>
-
         {!mostrarFormulario && !modoEdicion && (
           <div className="flex justify-center">
             <button
@@ -108,13 +101,11 @@ export default function Productos() {
             </button>
           </div>
         )}
-
         {mostrarFormulario && (
           <form onSubmit={handleSubmit} className="bg-gray-100 p-6 rounded mb-8 shadow-md">
             <h2 className="text-xl font-semibold mb-4 text-center">
               {modoEdicion ? 'Editar Producto' : 'Agregar Producto'}
             </h2>
-
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <input
                 type="text"
@@ -164,7 +155,6 @@ export default function Productos() {
               >
                 {modoEdicion ? 'Guardar cambios' : 'Agregar'}
               </Button>
-
               <Button
                 type="button"
                 onClick={resetForm}
@@ -177,7 +167,6 @@ export default function Productos() {
             </div>
           </form>
         )}
-
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           {productos.map(producto => (
             <div
@@ -196,7 +185,6 @@ export default function Productos() {
                 >
                   Editar
                 </Button>
-
                 <Button
                   onClick={() => handleDelete(producto.id)}
                   variant="contained"
