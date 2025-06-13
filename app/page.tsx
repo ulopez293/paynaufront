@@ -1,15 +1,7 @@
 "use client"
 import Link from 'next/link'
-import { useEffect } from 'react'
 
 export default function Home() {
-  useEffect(() => {
-    fetch('/api/auth', { method: 'POST' })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) console.log('Token guardado en cookie')
-      }).catch(console.error)
-  }, [])
   return (
     <main className="bg-white min-h-screen text-gray-800">
       <section className="max-w-7xl mx-auto px-4 py-20 text-center">

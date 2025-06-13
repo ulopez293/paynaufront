@@ -1,11 +1,18 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { FiMenu, FiX } from 'react-icons/fi'
 
 function Menu() {
   const [isOpen, setIsOpen] = useState(false)
+  useEffect(() => {
+    fetch('/api/auth', { method: 'POST' })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) console.log('Token guardado en cookie')
+      }).catch(console.error)
+  }, [])
   return (
     <header className="bg-gray-900 shadow-md text-white">
       <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
