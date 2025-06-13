@@ -173,6 +173,7 @@ export default function Ordenes() {
                                 className="border p-2 rounded w-full"
                                 value={form.fecha}
                                 onChange={e => setForm({ ...form, fecha: e.target.value })}
+                                min={new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().split("T")[0]}
                                 required
                             />
                         </div>
