@@ -5,8 +5,22 @@ import { getToken } from '../utils/getToken'
 import { NuevaOrden, Orden } from '../interface/Orden'
 import { cargarOrdenes, cargarProductos, submitOrden } from '../fetch/apiService'
 import Button from '@mui/material/Button'
+import TableContainer from '@mui/material/TableContainer'
+import Table from '@mui/material/Table'
+import TableHead from '@mui/material/TableHead'
+import TableRow from '@mui/material/TableRow'
+import TableCell from '@mui/material/TableCell'
+import Paper from '@mui/material/Paper'
+import TableBody from '@mui/material/TableBody'
+import List from '@mui/material/List'
+import ListItem from '@mui/material/ListItem'
+import Typography from '@mui/material/Typography'
+import useMediaQuery from '@mui/material/useMediaQuery'
+import { useTheme } from '@mui/material/styles'
 
 export default function Ordenes() {
+    const theme = useTheme()
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
     const [productosDisponibles, setProductosDisponibles] = useState<Producto[]>([])
     const [ordenes, setOrdenes] = useState<Orden[]>([])
     const [form, setForm] = useState({
@@ -253,43 +267,65 @@ export default function Ordenes() {
                     </form>
                 )}
                 <div className="overflow-x-auto">
-                    <table className="w-full border border-gray-200 rounded-lg shadow-sm">
-                        <thead className="bg-gray-100">
-                            <tr className="text-left text-sm text-gray-600">
-                                <th className="p-4">ID</th>
-                                <th className="p-4">Cliente</th>
-                                <th className="p-4">Fecha</th>
-                                <th className="p-4">Productos</th>
-                                <th className="p-4">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {ordenes.map(orden => (
-                                <tr key={orden.id} className="border-t hover:bg-gray-50 text-sm align-top">
-                                    <td className="p-4 font-mono">{orden.id}</td>
-                                    <td className="p-4">{orden.cliente}</td>
-                                    <td className="p-4">{orden.fecha}</td>
-                                    <td className="p-4">
-                                        <ul className="list-disc list-inside">
-                                            {orden.productos.map((p, i) => (
-                                                <li key={i}>
-                                                    {p.producto.nombre} ${p.producto.precio} x {p.cantidad} = ${(p.producto.precio * p.cantidad).toFixed(2)}
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </td>
-                                    <td className="p-4">{orden.total}</td>
-                                </tr>
-                            ))}
-                            {ordenes.length === 0 && (
-                                <tr>
-                                    <td colSpan={6} className="p-4 text-center text-gray-500">
-                                        No hay órdenes registradas.
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
+                    <TableContainer
+                        component={Paper}
+                        elevation={2}
+                        sx={{
+                            overflowX: 'auto',
+                            width: '100%',
+                            p: isMobile ? 1 : 2
+                        }}
+                    >
+                        <Table size={isMobile ? 'small' : 'medium'}>
+                            <TableHead>
+                                <TableRow>
+                                    <TableCell sx={{ minWidth: 60 }}>ID</TableCell>
+                                    <TableCell sx={{ minWidth: 100 }}>Cliente</TableCell>
+                                    <TableCell sx={{ minWidth: 100 }}>Fecha</TableCell>
+                                    <TableCell sx={{ minWidth: 200 }}>Productos</TableCell>
+                                    <TableCell sx={{ minWidth: 80 }}>Total</TableCell>
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {ordenes.length > 0 ? (
+                                    ordenes.map((orden) => (
+                                        <TableRow key={orden.id} hover>
+                                            <TableCell sx={{ fontFamily: 'monospace' }}>{orden.id}</TableCell>
+                                            <TableCell>{orden.cliente}</TableCell>
+                                            <TableCell>{orden.fecha}</TableCell>
+                                            <TableCell>
+                                                <List dense disablePadding>
+                                                    {orden.productos.map((p, i) => (
+                                                        <ListItem
+                                                            key={i}
+                                                            sx={{
+                                                                display: 'list-item',
+                                                                pl: 2,
+                                                                fontSize: isMobile ? '0.8rem' : '0.95rem'
+                                                            }}
+                                                        >
+                                                            {p.producto.nombre} ${p.producto.precio} x {p.cantidad} = ${(
+                                                                p.producto.precio * p.cantidad
+                                                            ).toFixed(2)}
+                                                        </ListItem>
+                                                    ))}
+                                                </List>
+                                            </TableCell>
+                                            <TableCell>${orden.total}</TableCell>
+                                        </TableRow>
+                                    ))
+                                ) : (
+                                    <TableRow>
+                                        <TableCell colSpan={5} align="center">
+                                            <Typography variant="body2" color="text.secondary">
+                                                No hay órdenes registradas.
+                                            </Typography>
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
                 </div>
                 {mostrarConfirmacion && (
                     <div className="fixed inset-0 bg-[rgba(0,0,0,0.5)] flex items-center justify-center z-50">
