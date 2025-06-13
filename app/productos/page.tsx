@@ -120,7 +120,11 @@ export default function Productos() {
                 placeholder="Nombre"
                 className="border p-2 rounded"
                 value={form.nombre}
-                onChange={e => setForm({ ...form, nombre: e.target.value })}
+                onChange={e => {
+                  const soloLetras = e.target.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúÑñ\s]/g, '')
+                  if (soloLetras.trim() === '' && soloLetras.length > 0) return
+                  setForm({ ...form, nombre: soloLetras })
+                }}
                 required
               />
               <input

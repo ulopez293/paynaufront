@@ -165,7 +165,11 @@ export default function Ordenes() {
                                 placeholder="Cliente"
                                 className="border p-2 rounded w-full"
                                 value={form.cliente}
-                                onChange={e => setForm({ ...form, cliente: e.target.value })}
+                                onChange={e => {
+                                    const soloLetras = e.target.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúÑñ\s]/g, '')
+                                    if (soloLetras.trim() === '' && soloLetras.length > 0) return
+                                    setForm({ ...form, cliente: soloLetras })
+                                }}
                                 required
                             />
                             <input
