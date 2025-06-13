@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { getToken } from '../utils/getToken'
 import { Producto } from '../interface/Producto'
 import { cargarProductos, deleteProducto, guardarProducto } from '../fetch/apiService'
+import Button from '@mui/material/Button'
 
 
 export default function Productos() {
@@ -156,19 +157,23 @@ export default function Productos() {
               />
             </div>
             <div className="mt-4 flex justify-center gap-2">
-              <button
+              <Button
                 type="submit"
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                variant="contained"
+                color="primary"
               >
                 {modoEdicion ? 'Guardar cambios' : 'Agregar'}
-              </button>
-              <button
+              </Button>
+
+              <Button
                 type="button"
                 onClick={resetForm}
-                className="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500"
+                variant="contained"
+                color="inherit"
+                sx={{ backgroundColor: 'gray', color: 'white', '&:hover': { backgroundColor: 'darkgray' }, ml: 2 }}
               >
                 Cancelar
-              </button>
+              </Button>
             </div>
           </form>
         )}
@@ -184,18 +189,22 @@ export default function Productos() {
               <p className="text-sm text-gray-800 mt-1">💵 ${producto.precio.toFixed(2)}</p>
               <p className="text-sm text-gray-800">📦 Stock: {producto.stock}</p>
               <div className="flex gap-2 mt-4">
-                <button
+                <Button
                   onClick={() => handleEdit(producto)}
-                  className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 text-sm"
+                  variant="contained"
+                  size="small"
                 >
                   Editar
-                </button>
-                <button
+                </Button>
+
+                <Button
                   onClick={() => handleDelete(producto.id)}
-                  className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
+                  variant="contained"
+                  size="small"
+                  color="error"
                 >
                   Eliminar
-                </button>
+                </Button>
               </div>
             </div>
           ))}

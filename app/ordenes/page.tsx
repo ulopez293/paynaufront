@@ -4,6 +4,7 @@ import { Producto, ProductoConCantidad } from '../interface/Producto'
 import { getToken } from '../utils/getToken'
 import { NuevaOrden, Orden } from '../interface/Orden'
 import { cargarOrdenes, cargarProductos, submitOrden } from '../fetch/apiService'
+import Button from '@mui/material/Button'
 
 export default function Ordenes() {
     const [productosDisponibles, setProductosDisponibles] = useState<Producto[]>([])
@@ -248,19 +249,24 @@ export default function Ordenes() {
                         </div>
 
                         <div className="mt-4 flex flex-col sm:flex-row gap-2">
-                            <button
+                            <Button
                                 type="submit"
-                                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 w-full sm:w-auto"
+                                variant="contained"
+                                color="success"  // verde
+                                fullWidth
                             >
                                 Agregar
-                            </button>
-                            <button
+                            </Button>
+                            <Button
                                 type="button"
                                 onClick={resetForm}
-                                className="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500 w-full sm:w-auto"
+                                variant="contained"
+                                color="error"    // rojo
+                                fullWidth
+                                style={{ marginTop: 8 }} // pequeño espacio entre botones
                             >
                                 Cancelar
-                            </button>
+                            </Button>
                         </div>
                     </form>
                 )}
