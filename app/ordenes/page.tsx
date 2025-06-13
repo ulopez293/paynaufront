@@ -263,7 +263,6 @@ export default function Ordenes() {
                                 variant="contained"
                                 color="error"    // rojo
                                 fullWidth
-                                style={{ marginTop: 8 }} // pequeño espacio entre botones
                             >
                                 Cancelar
                             </Button>
