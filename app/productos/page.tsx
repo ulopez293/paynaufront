@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { getToken } from '../utils/getToken'
 import { Producto } from '../interface/Producto'
-import { cargarProductos, deleteProducto, guardarProducto } from '../utils/apiService'
+import { cargarProductos, deleteProducto, guardarProducto } from '../fetch/apiService'
 
 
 export default function Productos() {

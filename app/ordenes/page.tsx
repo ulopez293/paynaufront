@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { Producto, ProductoConCantidad } from '../interface/Producto'
 import { getToken } from '../utils/getToken'
 import { NuevaOrden, Orden } from '../interface/Orden'
-import { cargarOrdenes, cargarProductos, submitOrden } from '../utils/apiService'
+import { cargarOrdenes, cargarProductos, submitOrden } from '../fetch/apiService'
 
 export default function Ordenes() {
     const [productosDisponibles, setProductosDisponibles] = useState<Producto[]>([])
