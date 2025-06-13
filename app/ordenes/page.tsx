@@ -1,7 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { Producto, ProductoConCantidad } from '../interface/Producto'
-import { getToken } from '../utils/getToken'
 import { NuevaOrden, Orden } from '../interface/Orden'
 import { cargarOrdenes, cargarProductos, submitOrden } from '../fetch/apiService'
 import Button from '@mui/material/Button'
@@ -17,6 +16,8 @@ import ListItem from '@mui/material/ListItem'
 import Typography from '@mui/material/Typography'
 import useMediaQuery from '@mui/material/useMediaQuery'
 import { useTheme } from '@mui/material/styles'
+import { FiPlusCircle, FiTrash2, FiXCircle } from 'react-icons/fi'
+import { useToken } from '../hooks/useToken'
 
 export default function Ordenes() {
     const theme = useTheme()
@@ -36,13 +37,10 @@ export default function Ordenes() {
     const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false)
     const [tipoConfirmacion, setTipoConfirmacion] = useState<'guardar' | 'cancelar'>('guardar')
     const [idCancelar, setIdCancelar] = useState<string | null>(null)
-    const token = getToken()
+    const { validateToken } = useToken()
+    const token = validateToken()
 
     useEffect(() => {
-        if (!token) {
-            console.error('Token no disponible')
-            return
-        }
         const fetchData = async () => {
             try {
                 const productos = await cargarProductos(token)
@@ -107,10 +105,6 @@ export default function Ordenes() {
         })
     }
     const submitOrdenHandler = async () => {
-        if (!token) {
-            console.error('Token no disponible')
-            return
-        }
         const nuevaOrden: NuevaOrden = {
             cliente: form.cliente,
             productos: form.productos.map(p => ({
@@ -146,29 +140,38 @@ export default function Ordenes() {
     }
 
     return (
-        <main className="bg-white min-h-screen px-4 py-12 text-gray-800">
+        <main className="bg-gradient-to-br from-blue-50 to-white min-h-screen px-4 py-10 text-gray-800">
             <div className="max-w-6xl mx-auto">
-                <h1 className="text-3xl font-bold mb-8 text-center">Órdenes</h1>
+                <h1 className="text-4xl font-extrabold text-center text-blue-800 mb-10">
+                    Órdenes
+                </h1>
+
                 {!mostrarFormulario && (
-                    <div className="text-center mb-6">
+                    <div className="text-center mb-8">
                         <button
                             onClick={() => setMostrarFormulario(true)}
-                            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                            className="bg-green-600 text-white px-6 py-3 rounded-md hover:bg-green-700 shadow-lg flex items-center gap-2 mx-auto transition"
                         >
+                            <FiPlusCircle className="text-xl" />
                             Agregar nueva orden
                         </button>
                     </div>
                 )}
+
                 {mostrarFormulario && (
-                    <form onSubmit={handleFormSubmit} className="bg-gray-100 p-4 rounded mb-8 max-w-full">
-                        <h2 className="text-xl font-semibold mb-4">
+                    <form
+                        onSubmit={handleFormSubmit}
+                        className="bg-white border rounded-xl p-6 shadow-xl mb-10"
+                    >
+                        <h2 className="text-2xl font-semibold mb-6 text-blue-700">
                             Agregar Orden
                         </h2>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                             <input
                                 type="text"
                                 placeholder="Cliente"
-                                className="border p-2 rounded w-full"
+                                className="border p-3 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-300"
                                 value={form.cliente}
                                 onChange={e => {
                                     const soloLetras = e.target.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúÑñ\s]/g, '')
@@ -179,20 +182,21 @@ export default function Ordenes() {
                             />
                             <input
                                 type="date"
-                                className="border p-2 rounded w-full"
+                                className="border p-3 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-300"
                                 value={form.fecha}
                                 onChange={e => setForm({ ...form, fecha: e.target.value })}
                                 min={new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().split("T")[0]}
                                 required
                             />
                         </div>
-                        <div className="border-t pt-4">
-                            <h3 className="text-lg font-medium mb-2">Productos</h3>
-                            <div className="flex flex-col sm:flex-row gap-2 mb-2">
+
+                        <div className="border-t pt-6">
+                            <h3 className="text-lg font-medium mb-4 text-gray-700">Productos</h3>
+                            <div className="flex flex-col sm:flex-row gap-2 mb-4">
                                 <select
                                     value={productoSeleccionado}
                                     onChange={e => setProductoSeleccionado(e.target.value)}
-                                    className="border p-2 rounded flex-1 w-full sm:w-auto"
+                                    className="border p-3 rounded flex-1 w-full focus:outline-none focus:ring-2 focus:ring-blue-300"
                                 >
                                     <option value="">Seleccionar producto</option>
                                     {productosDisponibles.map(producto => (
@@ -206,21 +210,22 @@ export default function Ordenes() {
                                     min={1}
                                     value={cantidadSeleccionada}
                                     onChange={e => setCantidadSeleccionada(Number(e.target.value))}
-                                    className="border p-2 rounded w-full sm:w-20"
+                                    className="border p-3 rounded w-full sm:w-24 focus:outline-none focus:ring-2 focus:ring-blue-300"
                                 />
                                 <button
                                     type="button"
                                     onClick={agregarProducto}
-                                    className="bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 w-full sm:w-auto"
+                                    className="bg-blue-600 text-white px-4 py-3 rounded-md hover:bg-blue-700 transition-all"
                                 >
                                     Agregar
                                 </button>
                             </div>
-                            <ul className="mb-2">
+
+                            <ul className="mb-4">
                                 {form.productos.map((p, index) => (
                                     <li
                                         key={index}
-                                        className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white border p-2 rounded mb-1 gap-2"
+                                        className="flex flex-col sm:flex-row justify-between items-start sm:items-center border p-3 rounded mb-2 bg-gray-50 shadow-sm transition hover:shadow-md"
                                     >
                                         <div>
                                             <span className="font-semibold">{p.nombre}</span> - ${p.precio.toFixed(2)} x{' '}
@@ -229,43 +234,35 @@ export default function Ordenes() {
                                                 min={1}
                                                 value={p.cantidad}
                                                 onChange={e => cambiarCantidad(index, Number(e.target.value))}
-                                                className="border rounded w-full sm:w-16 p-1 text-center"
-                                            />{' '}
-                                            = ${(p.precio * p.cantidad).toFixed(2)}
+                                                className="border rounded w-16 p-1 text-center ml-1"
+                                            /> = <span className="font-semibold">${(p.precio * p.cantidad).toFixed(2)}</span>
                                         </div>
                                         <button
                                             type="button"
                                             onClick={() => eliminarProducto(index)}
-                                            className="text-red-600 text-xs hover:underline self-start sm:self-auto"
+                                            className="text-red-600 hover:text-red-800 flex items-center gap-1 text-sm transition"
                                         >
+                                            <FiTrash2 className="text-base" />
                                             Eliminar
                                         </button>
                                     </li>
                                 ))}
                             </ul>
-                            <p className="font-semibold">Total: {calcularTotal(form.productos)}</p>
+
+                            <p className="font-semibold text-lg">Total: {calcularTotal(form.productos)}</p>
                         </div>
-                        <div className="mt-4 flex flex-col sm:flex-row gap-2">
-                            <Button
-                                type="submit"
-                                variant="contained"
-                                color="success"  // verde
-                                fullWidth
-                            >
+
+                        <div className="mt-6 flex flex-col sm:flex-row gap-3">
+                            <Button type="submit" variant="contained" color="success" fullWidth>
                                 Agregar
                             </Button>
-                            <Button
-                                type="button"
-                                onClick={resetForm}
-                                variant="contained"
-                                color="error"    // rojo
-                                fullWidth
-                            >
+                            <Button type="button" onClick={resetForm} variant="contained" color="error" fullWidth>
                                 Cancelar
                             </Button>
                         </div>
                     </form>
                 )}
+
                 <div className="overflow-x-auto">
                     <TableContainer
                         component={Paper}
@@ -273,7 +270,7 @@ export default function Ordenes() {
                         sx={{
                             overflowX: 'auto',
                             width: '100%',
-                            p: isMobile ? 1 : 2
+                            p: isMobile ? 1 : 2,
                         }}
                     >
                         <Table size={isMobile ? 'small' : 'medium'}>
@@ -301,7 +298,7 @@ export default function Ordenes() {
                                                             sx={{
                                                                 display: 'list-item',
                                                                 pl: 2,
-                                                                fontSize: isMobile ? '0.8rem' : '0.95rem'
+                                                                fontSize: isMobile ? '0.8rem' : '0.95rem',
                                                             }}
                                                         >
                                                             {p.producto.nombre} ${p.producto.precio} x {p.cantidad} = ${(
@@ -327,10 +324,17 @@ export default function Ordenes() {
                         </Table>
                     </TableContainer>
                 </div>
+
                 {mostrarConfirmacion && (
-                    <div className="fixed inset-0 bg-[rgba(0,0,0,0.5)] flex items-center justify-center z-50">
-                        <div className="bg-white p-6 rounded shadow max-w-sm w-full text-center">
-                            <p className="mb-4 font-semibold">
+                    <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
+                        <div className="bg-white p-6 rounded-xl shadow-2xl max-w-sm w-full text-center relative">
+                            <button
+                                onClick={() => setMostrarConfirmacion(false)}
+                                className="absolute top-2 right-2 text-gray-500 hover:text-red-600 transition"
+                            >
+                                <FiXCircle className="text-2xl" />
+                            </button>
+                            <p className="mb-6 font-medium text-gray-800 text-lg">
                                 {tipoConfirmacion === 'guardar'
                                     ? '¿Deseas guardar esta orden?'
                                     : '¿Seguro que quieres cancelar esta orden?'}
@@ -338,13 +342,13 @@ export default function Ordenes() {
                             <div className="flex justify-center gap-4">
                                 <button
                                     onClick={confirmarAccion}
-                                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-all shadow"
                                 >
                                     Sí
                                 </button>
                                 <button
                                     onClick={() => setMostrarConfirmacion(false)}
-                                    className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
+                                    className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500 transition-all shadow"
                                 >
                                     No
                                 </button>
@@ -354,5 +358,6 @@ export default function Ordenes() {
                 )}
             </div>
         </main>
+
     )
 }
