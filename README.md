@@ -1,6 +1,8 @@
 
 ## Inicio rapido
 
+Se debe crear el .env en base al de ejemplo
+
 ```bash
 npm run dev
 ```
