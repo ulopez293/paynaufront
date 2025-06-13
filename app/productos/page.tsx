@@ -1,12 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { getToken } from '../utils/getToken'
 import { Producto } from '../interface/Producto'
 import { cargarProductos, deleteProducto, guardarProducto } from '../fetch/apiService'
 import { Pencil, Trash2 } from 'lucide-react'
 import { Dialog } from '@headlessui/react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useToken } from '../hooks/useToken'
 
 export default function Productos() {
   const [productos, setProductos] = useState<Producto[]>([])
@@ -14,10 +14,13 @@ export default function Productos() {
   const [mostrarFormulario, setMostrarFormulario] = useState(false)
   const [form, setForm] = useState({ nombre: '', descripcion: '', precio: '', stock: '' })
   const [productoAEliminar, setProductoAEliminar] = useState<null | Producto>(null)
-  const { validateToken } = useToken()
-  const token = validateToken()
+  const token = getToken()
 
   useEffect(() => {
+    if (!token) {
+      console.error('Token no disponible')
+      return
+    }
     const fetchData = async () => {
       try {
         const productos = await cargarProductos(token)
@@ -37,6 +40,10 @@ export default function Productos() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!token) {
+      console.error('Token no disponible')
+      return
+    }
     const nuevoProducto = {
       nombre: form.nombre,
       descripcion: form.descripcion,
@@ -71,8 +78,8 @@ export default function Productos() {
   const confirmarEliminar = (producto: Producto) => setProductoAEliminar(producto)
   const cancelarEliminar = () => setProductoAEliminar(null)
   const handleDelete = async () => {
-    if (!productoAEliminar) {
-      alert('Producto no seleccionado')
+    if (!token || !productoAEliminar) {
+      alert('Token no disponible o producto no seleccionado')
       return
     }
     try {

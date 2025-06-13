@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { Producto, ProductoConCantidad } from '../interface/Producto'
+import { getToken } from '../utils/getToken'
 import { NuevaOrden, Orden } from '../interface/Orden'
 import { cargarOrdenes, cargarProductos, submitOrden } from '../fetch/apiService'
 import Button from '@mui/material/Button'
@@ -17,7 +18,6 @@ import Typography from '@mui/material/Typography'
 import useMediaQuery from '@mui/material/useMediaQuery'
 import { useTheme } from '@mui/material/styles'
 import { FiPlusCircle, FiTrash2, FiXCircle } from 'react-icons/fi'
-import { useToken } from '../hooks/useToken'
 
 export default function Ordenes() {
     const theme = useTheme()
@@ -37,10 +37,13 @@ export default function Ordenes() {
     const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false)
     const [tipoConfirmacion, setTipoConfirmacion] = useState<'guardar' | 'cancelar'>('guardar')
     const [idCancelar, setIdCancelar] = useState<string | null>(null)
-    const { validateToken } = useToken()
-    const token = validateToken()
+    const token = getToken()
 
     useEffect(() => {
+        if (!token) {
+            console.error('Token no disponible')
+            return
+        }
         const fetchData = async () => {
             try {
                 const productos = await cargarProductos(token)
@@ -105,6 +108,10 @@ export default function Ordenes() {
         })
     }
     const submitOrdenHandler = async () => {
+        if (!token) {
+            console.error('Token no disponible')
+            return
+        }
         const nuevaOrden: NuevaOrden = {
             cliente: form.cliente,
             productos: form.productos.map(p => ({
