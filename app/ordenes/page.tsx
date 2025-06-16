@@ -145,8 +145,6 @@ export default function Ordenes() {
             setMostrarConfirmacion(false)
         }
     }
-
-    console.log(ordenes);
     
     return (
         <main className="bg-gradient-to-br from-blue-50 to-white min-h-screen px-4 py-10 text-gray-800">
@@ -301,9 +299,9 @@ export default function Ordenes() {
                                             <TableCell>{orden.fecha}</TableCell>
                                             <TableCell>
                                                 <List dense disablePadding>
-                                                    {Array.isArray(orden.productos) ? orden.productos.map((p, i) => (
+                                                    {Array.isArray(orden.productos) ? orden.productos.map((p) => (
                                                         <ListItem
-                                                            key={i}
+                                                            key={p.id}
                                                             sx={{
                                                                 display: 'list-item',
                                                                 pl: 2,
