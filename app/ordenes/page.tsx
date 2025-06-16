@@ -137,6 +137,7 @@ export default function Ordenes() {
     }
 
     const confirmarAccion = () => {
+        console.log(form.productos.length)
         if (form.productos.length < 1) {
             alert("Agrega al menos un producto")
             return
@@ -312,9 +313,7 @@ export default function Ordenes() {
                                                                 fontSize: isMobile ? '0.8rem' : '0.95rem',
                                                             }}
                                                         >
-                                                            {p.producto.nombre} ${p.producto.precio} x {p.cantidad} = ${(
-                                                                p.producto.precio * p.cantidad
-                                                            ).toFixed(2)}
+                                                            {p.producto.nombre} x {p.cantidad} 
                                                         </ListItem>
                                                     )) : null}
                                                 </List>
